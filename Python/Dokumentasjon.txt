@@ -1,1 +1,4 @@
 Kilder og sånt kan legges her f.eks?
+
+Info om å bruke raspberry pi
+https://realpython.com/python-raspberry-pi/#running-python-on-the-raspberry-pi
