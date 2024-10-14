@@ -57,8 +57,6 @@ def start():
     position_y_diff = new_position_y - position_y
     
     for i in range(x):
-        #if(r == 1):
-         #   r -= 1
             
             new_position_x = np.random.randint(0,40)
             new_position_y = np.random.randint(0,40)
