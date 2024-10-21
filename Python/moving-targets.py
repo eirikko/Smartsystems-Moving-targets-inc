@@ -10,7 +10,8 @@ import numpy as np
 import array as arr
 import time as time
 import matplotlib.pyplot as plt
-
+import subprocess
+import threading
 
 #skal være en funskjon som aktiverer porten til motor A
 def Amove(z):
@@ -42,6 +43,33 @@ def printall(x,y,nx,ny,xd,yd):
     print("")
     
 
+
+def sensor():
+    #Skal lese inn fra trykksensor
+    x = np.random.randint(0,12)
+    time.sleep(0.1)
+    if (x == 1):
+        return True
+    else:
+        return False
+
+
+
+
+
+def poengfunction():
+    Score = 0
+    timeoutstart = time.time()
+    while(time.time() < timeoutstart + 2):
+
+        if (sensor() == True):
+            Score = Score+2
+
+    
+            print(Score)
+            time.sleep(0.2)       
+            break
+        time.sleep(0.1)
 
 
 
@@ -85,7 +113,45 @@ def start():
             #setter den posisjonen den skulle til, til nåværende posisjon
             position_x = new_position_x
             position_y = new_position_y
-            time.sleep(1)
- 
+        
+            time.sleep(0.5)
+            poengfunction()
             i += i
 start()
+
+
+
+
+
+"""
+while (True):
+    print (time.time())
+    time.sleep(1)
+"""
+
+
+  
+"""
+print (timeoutstart)
+time.sleep(2)      
+print (timeoutstart)   
+"""
+
+
+
+"""
+def lw():    
+ 
+    t1 = threading.Thread(target = start())
+    t2 = threading.Thread(target = poengfunction())
+   
+    t1.start()
+    t2.start()
+    for p in range(10):
+        
+        t1.join()
+        t2.join()
+    
+lw()
+
+"""
