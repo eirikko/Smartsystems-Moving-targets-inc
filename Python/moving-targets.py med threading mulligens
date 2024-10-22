@@ -1,0 +1,120 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Oct 21 12:01:47 2024
+
+@author: Helten fra larvik som tok på seg monstere av å skaffe threading i en U-kode, for å gjøre det om til en I-kode
+"""
+
+import numpy as np
+import threading
+import time
+
+
+def Amove(z):
+    print (z ,"| A motor steps")
+    
+def Bmove(z):
+    print (z ,"| B motor steps")
+
+def deltaA(delX, delY):
+    return delX + delY
+
+def deltaB(delX, delY):
+    return delX - delY
+
+
+def printall(x,y,nx,ny,xd,yd):
+    print("")
+    print("---------------------")
+    print("")
+    print("current position: ", x, " ", y)
+    print("")
+    print("new position: ", nx, " ", ny)
+    print("")
+    print("position differential: ", xd, " ", yd)
+    print("")
+
+def sensor():
+    #Skal lese inn fra trykksensor
+    x = np.random.randint(0,2)
+    time.sleep(0.1)
+    if (x == 1):
+        return True
+    else:
+        return False
+
+def regular_task():
+    position_y = 0
+    position_x = 0
+    
+    new_position_x = 0
+    new_position_y = 0
+    
+    motorAmovement = 0
+    motorBmovement = 0
+    
+    
+    position_x_diff = new_position_x - position_x
+    position_y_diff = new_position_y - position_y
+    
+    for i in range(5):
+            
+        new_position_x = np.random.randint(0,40)
+        new_position_y = np.random.randint(0,40)
+        position_x_diff = new_position_x - position_x
+        position_y_diff = new_position_y - position_y
+        printall(position_x , position_y, new_position_x, new_position_y, position_x_diff, position_y_diff)
+        
+        motorAmovement = deltaA(position_x_diff, position_y_diff)
+        motorBmovement = deltaB(position_x_diff, position_y_diff)
+            
+        Amove(motorAmovement)
+        Bmove(motorBmovement)
+        print ("")
+        print ("-----------------")
+        print ("")
+                
+        position_x = new_position_x
+        position_y = new_position_y
+        time.sleep(1)
+        #poengfunction()
+        
+        time.sleep(1)
+time_now = time.time()
+
+def daemon_task():
+    Score = 0
+    while True:
+        print ("point system active")
+        if (time.time() > time_now + 10):
+            break
+        if (sensor() == True):
+            Score = Score +  2
+        
+            print(Score)
+            time.sleep(0.2)       
+            #break
+        time.sleep(1)
+            
+            
+# Regular thread
+t1 = threading.Thread(target=regular_task)
+
+# Daemon thread
+t2 = threading.Thread(target=daemon_task)
+t2.setDaemon(True)
+
+t1.start()
+t2.start()
+
+t1.join()  # Main program waits for the regular thread to finish
+print("Main program finished")
+t2._stop
+
+
+"""
+KILDER
+https://docs.python.org/3/library/threading.html
+https://www.geeksforgeeks.org/regular-threads-vs-daemon-threads-in-python/?ref=oin_asr1
+https://www.geeksforgeeks.org/python-daemon-threads/
+"""
