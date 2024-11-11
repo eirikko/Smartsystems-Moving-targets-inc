@@ -1,4 +1,4 @@
-"""Made by the one and only"""
+"""Made by the only one"""
 
 
 import cv2
