@@ -4,11 +4,13 @@ Created on Mon Oct 21 12:01:47 2024
 
 @author: Helten fra larvik som tok på seg monstere av å skaffe threading i en U-kode, for å gjøre det om til en I-kode
 """
-
 from tkinter import *
 import numpy as np
 import threading
 import time
+from PIL import ImageTk, Image
+import cv2
+
 start_time = time.time()
 
 def Amove(z):
@@ -106,8 +108,22 @@ def clock():
     else:    
         clock_label.config(text=str(minute) + ":" + str(clock.counter))
     clock_label.after(1000, clock)
-        
+
 clock.counter = 60
+
+
+
+cap = cv2.VideoCapture(0)
+
+def video_stream():
+    _, frame = cap.read()
+    cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+    img = Image.fromarray(cv2image)
+    imgtk = ImageTk.PhotoImage(image=img)
+    lmain.imgtk = imgtk
+    lmain.configure(image=imgtk)
+    lmain.after(1, video_stream) 
+        
     
 #en funksjon til å starte alle funksjoner som må startes når spille skal begynne
 def start():
@@ -123,7 +139,9 @@ def start():
     
     start_Button.grid_remove()
     clock_label.grid(row=0, column=0)
-    cv2placeholder.grid(row=0, column=0, pady=5)
+    app.grid(row=4, column=0, columnspan=3, pady=15)
+    lmain.grid()
+    video_stream()
     #t1.join()
     return        
 
@@ -132,14 +150,17 @@ root.geometry("1167x800")
 root.title("Moving Targets Inc.")
 
 frame = LabelFrame(root, text="TIMER", padx=10, pady=10)
-cameraframe = LabelFrame(root, text="TURRET-POV",padx=10,pady=10)
 
 title_label = Label(root, text="Moving Targets inc.", font=("Comic sans", 100), fg="white", bg="grey")
 score_label = Label(root, text="", font=("Comic sans", 60))
 clock_label = Label(frame, text="", font=("Comic sans", 80), fg="white", bg="black")
 start_Button = Button(root, text="START", font=("Comic sans", 48), padx=10, pady=10, command=start)
 
-cv2placeholder = Label(cameraframe, text="CV2 Camera feed here", font=("Comic sans", 60), pady=100)
+app = LabelFrame(root, text="TURRET-POV",padx=10,pady=10)
+
+lmain = Label(app)
+
+
 
 empty = Label(root, text="", font=("Comic sans", 60))
 
@@ -148,7 +169,7 @@ score_label.grid(row=2, column=2, pady=5)
 empty.grid(row=2, column=0, pady=5)
 frame.grid(row=2, column=1, pady=5)
 start_Button.grid(row=3, column=1, pady=5)
-cameraframe.grid(row=4, column=0, columnspan=3, pady=15)
+
 
 root.mainloop()
 
