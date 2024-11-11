@@ -10,10 +10,10 @@ class MoveWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.numbers = ["2038", "5000", "0", "200", "500", "1000", "1500"]
+        self.numbers = ["2038", "5000", "0", "3000", "500", "1000", "1500"]
         self.counter = 0
         self.incrementStep = 100
-        self.text = QtWidgets.QLabel("2038", alignment=QtCore.Qt.AlignCenter)
+        self.text = QtWidgets.QLabel("0", alignment=QtCore.Qt.AlignCenter)
         self.selectedPort = None 
 
         # Main layout
@@ -88,7 +88,7 @@ class MoveWidget(QWidget):
             self.selectedPort.write(valueToSend.encode())
 
     def FindComPorts(self):
-        #Scan for COM ports and add buttons for each port
+        #Scan for COM ports and add buttons for each port. This is for arduino connection
         ports = serial.tools.list_ports.comports()
         
         for port in ports:
@@ -97,7 +97,7 @@ class MoveWidget(QWidget):
             self.mainLayout.addWidget(comButton)
 
     def selectComPort(self, portName):
-        #Select COM port for communication with COM
+        #Select COM port for communication with COM. This is for arduino connection
         try:
             #close existing port if open
             if self.selectedPort and self.selectedPort.is_Open:
