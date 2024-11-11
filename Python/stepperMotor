@@ -1,0 +1,154 @@
+import sys
+import random
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
+from PySide6.QtWidgets import QLineEdit
+from PySide6 import QtWidgets, QtCore
+from gpiozero import OutputDevice
+from threading import Thread
+import time
+
+# Stepper Motor Class
+class StepperMotor:
+    def __init__(self, step_pin, dir_pin, en_pin, steps_per_rev=200):
+        # Define pins
+        self.step_pin = OutputDevice(step_pin)
+        self.dir_pin = OutputDevice(dir_pin)
+        self.en_pin = OutputDevice(en_pin)
+        
+        # Motor settings
+        self.steps_per_rev = steps_per_rev
+        self.max_speed = 1000.0
+        self.acceleration = 200.0
+        self.current_speed = 200.0
+        self.target_position = 0
+        self.current_position = 0
+        self.step_delay = 0.001
+        self.running = False
+
+    def set_max_speed(self, speed):
+        self.max_speed = speed
+
+    def set_acceleration(self, acceleration):
+        self.acceleration = acceleration
+
+    def set_speed(self, speed):
+        self.current_speed = min(speed, self.max_speed)
+        self.step_delay = 1 / self.current_speed
+
+    def move_to(self, position):
+        self.target_position = position
+        self.running = True
+        if not hasattr(self, 'thread') or not self.thread.is_alive():
+            self.thread = Thread(target=self.run)
+            self.thread.start()
+
+    def run(self):
+        while self.running:
+            distance_to_go = self.target_position - self.current_position
+            if distance_to_go == 0:
+                self.running = False
+                break
+
+            # Set direction
+            self.dir_pin.value = distance_to_go > 0
+
+            # Accelerate/decelerate logic (simplified for demonstration)
+            if self.acceleration > 0:
+                if abs(self.current_speed) < self.max_speed:
+                    self.current_speed += self.acceleration * 0.01
+                    self.set_speed(self.current_speed)
+            self.step_pin.on()
+            time.sleep(self.step_delay)
+            self.step_pin.off()
+            time.sleep(self.step_delay)
+
+            # Update current position
+            self.current_position += 1 if self.dir_pin.value else -1
+
+    def stop(self):
+        self.running = False
+        if hasattr(self, 'thread'):
+            self.thread.join()
+
+# MoveWidget Class
+class MoveWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        # Stepper motor initialization
+        self.motor = StepperMotor(step_pin=8, dir_pin=10, en_pin=11)
+
+        self.numbers = ["2038", "5000", "0", "3000", "500", "1000", "1500"]
+        self.counter = 0
+        self.incrementStep = 100
+        self.text = QtWidgets.QLabel("0", alignment=QtCore.Qt.AlignCenter)
+
+        # Main layout
+        self.mainLayout = QHBoxLayout(self)
+
+        # Left column for random buttons
+        self.randomLayout = QVBoxLayout()
+        button = QtWidgets.QPushButton("Random Next Position")
+        button.clicked.connect(self.sendRandomNumber)
+        self.randomLayout.addWidget(button)
+
+        # Middle column for increment/decrement buttons
+        self.fixedLayout = QVBoxLayout()
+        incrementButton = QPushButton("Increment button")
+        incrementButton.clicked.connect(self.sendIncrementedNumber)
+        self.fixedLayout.addWidget(incrementButton)
+
+        decrementButton = QPushButton("Decrement button")
+        decrementButton.clicked.connect(self.sendDecrementedNumber)
+        self.fixedLayout.addWidget(decrementButton)
+
+        # Right column for entering text
+        self.textLayout = QVBoxLayout()
+        self.textField = QLineEdit("1000")
+        self.textLayout.addWidget(self.textField)
+        textButton = QPushButton("Send text")
+        textButton.clicked.connect(self.sendTextField)
+        self.textLayout.addWidget(textButton)
+
+        # Add widgets to main layout
+        self.mainLayout.addLayout(self.randomLayout)
+        self.mainLayout.addWidget(self.text)
+        self.mainLayout.addLayout(self.fixedLayout)
+        self.mainLayout.addLayout(self.textLayout)
+
+    @QtCore.Slot()
+    def sendRandomNumber(self):
+        randomValue = random.choice(self.numbers)
+        self.text.setText(randomValue)
+        self.motor.move_to(int(randomValue))
+
+    @QtCore.Slot()
+    def sendIncrementedNumber(self):
+        self.counter += self.incrementStep
+        incrementValue = str(self.counter)
+        self.text.setText(incrementValue)
+        self.motor.move_to(self.counter)
+
+    @QtCore.Slot()
+    def sendDecrementedNumber(self):
+        self.counter -= self.incrementStep
+        decrementValue = str(self.counter)
+        self.text.setText(decrementValue)
+        self.motor.move_to(self.counter)
+
+    @QtCore.Slot()
+    def sendTextField(self):
+        valueToSend = self.textField.text()
+        try:
+            target_position = int(valueToSend)
+            self.text.setText(valueToSend)
+            self.motor.move_to(target_position)
+        except ValueError:
+            print("Invalid input; please enter an integer.")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MoveWidget()
+
+    window.show()
+    sys.exit(app.exec())
